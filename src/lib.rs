@@ -6,6 +6,10 @@
 pub mod reader;
 pub mod state;
 mod types;
+pub mod writer;
 
 #[cfg(test)]
 extern crate std;
+
+#[cfg(any(test, feature = "alloc"))]
+extern crate alloc;

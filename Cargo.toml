@@ -3,4 +3,8 @@ edition = "2021"
 name = "rmnd"
 version = "0.1.0"
 
+[features]
+alloc = []
+default = ["alloc"]
+
 [dependencies]
