@@ -1,33 +1,4 @@
-use core::{mem, ops::AddAssign};
-
-pub trait Append {
-    fn append(&mut self, other: &mut Self);
-}
-
-#[cfg(any(test, feature = "alloc"))]
-impl Append for alloc::string::String {
-    fn append(&mut self, other: &mut Self) {
-        self.push_str(other);
-    }
-}
-
-#[cfg(any(test, feature = "alloc"))]
-impl<T> Append for alloc::vec::Vec<T> {
-    fn append(&mut self, other: &mut Self) {
-        self.append(other)
-    }
-}
-
-#[derive(Default, Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[repr(transparent)]
-pub struct Count<T>(pub T);
-
-impl<T: AddAssign<T> + Default> Append for Count<T> {
-    fn append(&mut self, other: &mut Self) {
-        let other = mem::take(other);
-        self.0 += other.0;
-    }
-}
+use crate::monad::Append;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Writer<T, W>(pub T, pub W);
@@ -84,20 +55,22 @@ macro_rules! writer {
     {@ $e:expr} => ($e);
     {$e:expr} => ($crate::writer::value($e));
     {let $v:pat = @ $e:expr $(=> $ty:ty)?; $($t:tt)*} => {{
-        let closure = move |$v $(:$ty)?| writer!($($t)*);
+        let closure = move |$v $(:$ty)?| $crate::writer!($($t)*);
         $e .bind(closure)
     }};
     {let $v:pat = $e:expr $(=> $ty:ty)?; $($t:tt)*} => {{
-        let closure = move |$v $(:$ty)?| writer!($($t)*);
+        let closure = move |$v $(:$ty)?| $crate::writer!($($t)*);
         $crate::writer::value($e).bind(closure)
     }};
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::writer::Writer;
+    use quickcheck_macros::quickcheck;
 
-    use super::{write, Count};
+    use crate::{monad::Count, writer::Writer};
+
+    use super::write;
     use std::format;
 
     #[test]
@@ -114,10 +87,10 @@ mod tests {
         assert_eq!(w, "1\n3\n");
     }
 
-    #[test]
-    fn count() {
+    #[quickcheck]
+    fn count(input: i16) {
         let w = writer! {
-            let x = 1 => i32;
+            let x = input as i32 => i32;
             let _ = @write(Count(x));
             let y = x + 2;
             let _ = @write(Count(y));

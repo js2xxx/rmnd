@@ -134,17 +134,19 @@ mod tests {
 
     use std::string::ToString;
 
+    use quickcheck_macros::quickcheck;
+
     use super::read;
 
-    #[test]
-    fn basic() {
+    #[quickcheck]
+    fn basic(input: i16) {
         let dup = reader! {
-            let x = @read();
+            let x = @read() => i32;
             let y = @read();
             x + y
         };
-        assert_eq!(dup(1), 2);
-        assert_eq!(dup(1), 2);
+        assert_eq!(dup(input as i32), (input as i32) * 2);
+        assert_eq!(dup(input as i32), (input as i32) * 2);
     }
 
     #[test]

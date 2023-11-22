@@ -137,18 +137,24 @@ macro_rules! state {
 
 #[cfg(test)]
 mod tests {
+    use quickcheck_macros::quickcheck;
+
     use super::{read, write};
 
-    #[test]
-    fn basic() {
+    #[quickcheck]
+    fn basic(input: i32) {
         let m = state! {
-            let x = @read();
-            let y = x + 1;
+            let x = @read() => i32;
+            let y = x.wrapping_add(1);
             let _ = @write(y);
-            x + y
+            x.wrapping_add(y)
         };
-        assert_eq!(m(1), (3, 2));
-        assert_eq!(m(2), (5, 3));
-        assert_eq!(m(3), (7, 4));
+        assert_eq!(
+            m(input),
+            (
+                input.wrapping_add(1).wrapping_add(input),
+                input.wrapping_add(1)
+            )
+        );
     }
 }

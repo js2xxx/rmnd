@@ -7,6 +7,7 @@ pub mod reader;
 pub mod state;
 mod types;
 pub mod writer;
+pub mod monad;
 
 #[cfg(test)]
 extern crate std;
